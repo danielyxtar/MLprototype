@@ -1,4 +1,8 @@
 import streamlit as st
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
 
 col1, col2, col3 = st.columns([4, 4, 2])  # Adjust column widths as needed
 with col2:
@@ -65,13 +69,6 @@ with tab2:
         num_rnaeot = st.number_input("RNA EOT : ", placeholder='Enter RNA EOT', min_value=1, step=1)
         num_rnaef = st.number_input("RNA EF : ", placeholder='Enter RNA EF', min_value=1, step=1)
         num_bhg = st.number_input("Baseline Histological Grading : ", placeholder='Enter Baseline Histological Grading', min_value=1, step=1)
-    
-
-    
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
 
 # Load the dataset
 @st.cache
