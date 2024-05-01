@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 
+st.set_page_config(
+    page_title="PrototypeJ"
+)
+
 st.title('Welcome to Rhine Pharmeceuticals')
 
 st.write('CSV File Upload')
