@@ -75,8 +75,10 @@ from sklearn.metrics import mean_squared_error
 
 @st.cache
 def load_data():
-    # Load your dataset here
-    return pd.read_csv("HCV-Egy-Data.csv")
+    df = pd.read_csv("HCV-Egy-Data.csv")
+    # Assuming 'Gender' is the only categorical feature for simplicity
+    df = pd.get_dummies(df, columns=['Gender'], drop_first=True)
+    return df
 
 data = load_data()
 
@@ -91,28 +93,17 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 model = RandomForestRegressor(random_state=42)
 model.fit(X_train, y_train)
 
-# Streamlit layout
-st.image('logo.png', width=180)  # Adjust as needed
-
-# Sidebar for contact preferences and shipping method
-with st.sidebar:
-    st.selectbox("How would you like to be contacted?", ["Email", "Home phone", "Mobile phone"])
-    st.radio("Choose a shipping method", ["Standard (5-15 days)", "Express (2-5 days)"])
-
-# Main tabs for Analysis and Prediction
-tab1, tab2 = st.tabs(["📈 Analysis Chart", "🗃 Prediction"])
-
-with tab1:
-    tab1.subheader("Analysis Chart")
-    # Include your analysis plot code here (e.g., line chart, histogram)
-
+# Predicting
 with tab2:
     tab2.subheader("HCV Prediction")
     with st.form("prediction_form"):
         # Dynamically create input fields based on data columns
         input_data = {}
         for column in X.columns:
-            input_data[column] = st.number_input(f"{column} :", key=f"input_{column}")  # Unique key for each input
+            if X[column].dtype == 'float64' or X[column].dtype == 'int64':
+                input_data[column] = st.number_input(f"{column} :", key=f"input_{column}")  # Unique key for each input
+            else:  # For categorical fields, assuming binary encoded
+                input_data[column] = st.selectbox(f"{column} :", [0, 1], format_func=lambda x: 'Yes' if x == 1 else 'No', key=f"input_{column}")
 
         submitted = st.form_submit_button("Predict")
         if submitted:
@@ -120,4 +111,3 @@ with tab2:
             input_df = pd.DataFrame([input_data])
             prediction = model.predict(input_df)
             st.write("Predicted Baseline Histological Staging:", prediction[0])
-
