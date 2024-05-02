@@ -57,7 +57,7 @@ X_preprocessed = preprocess_data(X, poly_transformer, scaler, fit_transform=True
 # Splitting the data
 X_train, X_test, y_train, y_test = train_test_split(X_preprocessed, y, test_size=0.2, random_state=20)
 
-new_data_preprocessed = preprocess_data(new_data, poly_transformer, scaler, fit_transform=False)
+new_data_preprocessed = preprocess_data(data, poly_transformer, scaler, fit_transform=False)
 
 # Predict using the model
 predictions = model.predict(new_data_preprocessed)
