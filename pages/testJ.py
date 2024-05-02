@@ -57,11 +57,6 @@ X_preprocessed = preprocess_data(X, poly_transformer, scaler, fit_transform=True
 # Splitting the data
 X_train, X_test, y_train, y_test = train_test_split(X_preprocessed, y, test_size=0.2, random_state=20)
 
-new_data_preprocessed = preprocess_data(data, poly_transformer, scaler, fit_transform=False)
-
-# Predict using the model
-predictions = model.predict(new_data_preprocessed)
-
 # Stacking Model
 knn_improved = KNeighborsClassifier(n_neighbors=3)  
 nb_improved = GaussianNB(var_smoothing=1.0)
@@ -189,6 +184,10 @@ poly_features = new_df[['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue
 poly_degree = 2  # Set the polynomial degree
 poly_transformer = PolynomialFeatures(degree=poly_degree, include_bias=False)
 poly_features_poly = poly_transformer.fit_transform(poly_features)
+
+new_data_preprocessed = preprocess_data(new_data, poly_transformer, scaler, fit_transform=False)
+# Predict using the model
+predictions = model.predict(new_data_preprocessed)
 
 # Convert the transformed polynomial features back to a DataFrame
 poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
