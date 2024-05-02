@@ -31,10 +31,15 @@ def preprocess_features(df, poly_transformer, scaler):
     data.loc[outliers, 'RNA 12'] = rna12_mean
 
     # Assuming `selected_columns` holds columns to be transformed polynomially
-    selected_columns = ['Headache', 'Diarrhea', 'Jaundice', 'Fatigue & generalized bone ache', 'Epigastric pain', 'Fever', 'Nausea/Vomting']
-    X_poly = poly_transformer.transform(df[selected_columns])
+    selected_columns = ['Headache ', 'Diarrhea ', 'Jaundice ', 'Fatigue & generalized bone ache ', 'Epigastric pain ', 'Fever', 'Nausea/Vomting']
+    poly_transformer = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
+    X_poly = poly_transformer.fit_transform(data[selected_columns])
     X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
-    X_poly_df.index = df.index  
+    X_poly_df.index = data.index  # Align index with original data
+    X_enhanced = pd.concat([data.drop(selected_columns, axis=1), X_poly_df], axis=1)
+    scaler = StandardScaler()
+    X_enhanced_scaled = scaler.fit_transform(X_enhanced)
+    X_train_enhanced, X_test_enhanced, y_train, y_test = train_test_split(X_enhanced_scaled, y, test_size=0.2, random_state=20)
 
     # Concatenate with other features
     X_enhanced = pd.concat([df.drop(selected_columns, axis=1), X_poly_df], axis=1)
