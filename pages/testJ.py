@@ -9,44 +9,58 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import StackingClassifier
+from sklearn.impute import SimpleImputer
 
 # Load data
 data = pd.read_csv('HCV-Egy-Data.csv')
 X = data.drop(columns=['Baselinehistological staging'])
 y = data['Baselinehistological staging']
-def preprocess_features(df, poly_transformer, scaler):
-    # Handle missing values
-    rna12_mean = data['RNA 12'].mean()
-    data['RNA 12'].fillna(rna12_mean, inplace=True)
-    # Calculate IQR
+
+def preprocess_data(data, poly_transformer, scaler, fit_transform=False):
+    # Handle missing values for 'RNA 12'
+    imputer = SimpleImputer(strategy='mean')
+    data['RNA 12'] = imputer.fit_transform(data[['RNA 12']]) if fit_transform else imputer.transform(data[['RNA 12']])
+
+    # Handling outliers (if still required)
     Q1 = data['RNA 12'].quantile(0.25)
     Q3 = data['RNA 12'].quantile(0.75)
     IQR = Q3 - Q1
-    #Define the lower and upper bounds for outliers
     lower_bound = Q1 - 1.5 * IQR
     upper_bound = Q3 + 1.5 * IQR
-    # Identify outliers
-    outliers = (data['RNA 12'] < lower_bound) | (data['RNA 12'] > upper_bound)
-    # Replace outliers with mean
-    data.loc[outliers, 'RNA 12'] = rna12_mean
+    data.loc[data['RNA 12'] < lower_bound, 'RNA 12'] = data['RNA 12'].mean()
+    data.loc[data['RNA 12'] > upper_bound, 'RNA 12'] = data['RNA 12'].mean()
 
-    # Assuming `selected_columns` holds columns to be transformed polynomially
+    # Feature Engineering: Polynomial Features
     selected_columns = ['Headache ', 'Diarrhea ', 'Jaundice ', 'Fatigue & generalized bone ache ', 'Epigastric pain ', 'Fever', 'Nausea/Vomting']
-    poly_transformer = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
-    X_poly = poly_transformer.fit_transform(data[selected_columns])
+    if fit_transform:
+        X_poly = poly_transformer.fit_transform(data[selected_columns])
+    else:
+        X_poly = poly_transformer.transform(data[selected_columns])
+    
     X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
-    X_poly_df.index = data.index  # Align index with original data
-    X_enhanced = pd.concat([data.drop(selected_columns, axis=1), X_poly_df], axis=1)
-    scaler = StandardScaler()
-    X_enhanced_scaled = scaler.fit_transform(X_enhanced)
-    X_train_enhanced, X_test_enhanced, y_train, y_test = train_test_split(X_enhanced_scaled, y, test_size=0.2, random_state=20)
+    data = data.drop(selected_columns, axis=1)
+    data = pd.concat([data, X_poly_df], axis=1)
+    
+    # Scaling
+    if fit_transform:
+        data_scaled = scaler.fit_transform(data)
+    else:
+        data_scaled = scaler.transform(data)
 
-    # Concatenate with other features
-    X_enhanced = pd.concat([df.drop(selected_columns, axis=1), X_poly_df], axis=1)
+    return data_scaled
 
-    # Scale features
-    X_scaled = scaler.transform(X_enhanced)
-    return X_scaled
+poly_transformer = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
+scaler = StandardScaler()
+
+X_preprocessed = preprocess_data(X, poly_transformer, scaler, fit_transform=True)
+
+# Splitting the data
+X_train, X_test, y_train, y_test = train_test_split(X_preprocessed, y, test_size=0.2, random_state=20)
+
+new_data_preprocessed = preprocess_data(new_data, poly_transformer, scaler, fit_transform=False)
+
+# Predict using the model
+predictions = model.predict(new_data_preprocessed)
 
 # Stacking Model
 knn_improved = KNeighborsClassifier(n_neighbors=3)  
@@ -177,16 +191,10 @@ poly_transformer = PolynomialFeatures(degree=poly_degree, include_bias=False)
 poly_features_poly = poly_transformer.fit_transform(poly_features)
 
 # Convert the transformed polynomial features back to a DataFrame
-# poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
+ poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
 
 # Merge the polynomial features with the rest of the input features
-# user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
-
-# Make predictions
-# predictions = model.predict(user_input_final_df)
-
-user_input_preprocessed = preprocess_features(new_df, poly_transformer, scaler)
-predictions = model.predict(user_input_preprocessed)
+ user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
 
 # Display the prediction
 st.write("Predicted Target Value:", predictions)
