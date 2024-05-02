@@ -68,7 +68,7 @@ base_models = [
 ]
 meta_model = LogisticRegression()
 stacking_model = StackingClassifier(estimators=base_models, final_estimator=meta_model, cv=5)
-stacking_model.fit(X_train_enhanced, y_train)
+stacking_model.fit(X_train, y_train)
 dump(stacking_model, 'best_model.pkl')
 
 # Load Model
