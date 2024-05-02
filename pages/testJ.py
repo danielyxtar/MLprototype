@@ -14,32 +14,34 @@ from sklearn.ensemble import StackingClassifier
 data = pd.read_csv('HCV-Egy-Data.csv')
 X = data.drop(columns=['Baselinehistological staging'])
 y = data['Baselinehistological staging']
+def preprocess_features(df, poly_transformer, scaler):
+    # Handle missing values
+    rna12_mean = data['RNA 12'].mean()
+    data['RNA 12'].fillna(rna12_mean, inplace=True)
+    # Calculate IQR
+    Q1 = data['RNA 12'].quantile(0.25)
+    Q3 = data['RNA 12'].quantile(0.75)
+    IQR = Q3 - Q1
+    #Define the lower and upper bounds for outliers
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    # Identify outliers
+    outliers = (data['RNA 12'] < lower_bound) | (data['RNA 12'] > upper_bound)
+    # Replace outliers with mean
+    data.loc[outliers, 'RNA 12'] = rna12_mean
 
-# Handle outliers
-rna12_mean = data['RNA 12'].mean()
-data['RNA 12'].fillna(rna12_mean, inplace=True)
-# Calculate IQR
-Q1 = data['RNA 12'].quantile(0.25)
-Q3 = data['RNA 12'].quantile(0.75)
-IQR = Q3 - Q1
-# Define the lower and upper bounds for outliers
-lower_bound = Q1 - 1.5 * IQR
-upper_bound = Q3 + 1.5 * IQR
-# Identify outliers
-outliers = (data['RNA 12'] < lower_bound) | (data['RNA 12'] > upper_bound)
-# Replace outliers with mean
-data.loc[outliers, 'RNA 12'] = rna12_mean
+    # Assuming `selected_columns` holds columns to be transformed polynomially
+    selected_columns = ['Headache', 'Diarrhea', 'Jaundice', 'Fatigue & generalized bone ache', 'Epigastric pain', 'Fever', 'Nausea/Vomting']
+    X_poly = poly_transformer.transform(df[selected_columns])
+    X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
+    X_poly_df.index = df.index  
 
-#Feature Engineering and Train-Test-Split
-selected_columns = ['Headache ', 'Diarrhea ', 'Jaundice ', 'Fatigue & generalized bone ache ', 'Epigastric pain ', 'Fever', 'Nausea/Vomting']
-poly_transformer = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
-X_poly = poly_transformer.fit_transform(data[selected_columns])
-X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
-X_poly_df.index = data.index  # Align index with original data
-X_enhanced = pd.concat([data.drop(selected_columns, axis=1), X_poly_df], axis=1)
-scaler = StandardScaler()
-X_enhanced_scaled = scaler.fit_transform(X_enhanced)
-X_train_enhanced, X_test_enhanced, y_train, y_test = train_test_split(X_enhanced_scaled, y, test_size=0.2, random_state=20)
+    # Concatenate with other features
+    X_enhanced = pd.concat([df.drop(selected_columns, axis=1), X_poly_df], axis=1)
+
+    # Scale features
+    X_scaled = scaler.transform(X_enhanced)
+    return X_scaled
 
 # Stacking Model
 knn_improved = KNeighborsClassifier(n_neighbors=3)  
@@ -57,32 +59,6 @@ dump(stacking_model, 'best_model.pkl')
 
 # Load Model
 model = load('best_model.pkl')
-
-def preprocess_features(df, poly_transformer, scaler):
-    # Handle missing values
-    rna12_mean = df['RNA 12'].mean()
-    df['RNA 12'].fillna(rna12_mean, inplace=True)
-
-    # Calculate IQR for RNA 12 and replace outliers
-    Q1 = df['RNA 12'].quantile(0.25)
-    Q3 = df['RNA 12'].quantile(0.75)
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-    df.loc[(df['RNA 12'] < lower_bound) | (df['RNA 12'] > upper_bound), 'RNA 12'] = rna12_mean
-
-    # Assuming `selected_columns` holds columns to be transformed polynomially
-    selected_columns = ['Headache', 'Diarrhea', 'Jaundice', 'Fatigue & generalized bone ache', 'Epigastric pain', 'Fever', 'Nausea/Vomting']
-    X_poly = poly_transformer.transform(df[selected_columns])
-    X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
-    X_poly_df.index = df.index  # Align index with original data
-
-    # Concatenate with other features
-    X_enhanced = pd.concat([df.drop(selected_columns, axis=1), X_poly_df], axis=1)
-
-    # Scale features
-    X_scaled = scaler.transform(X_enhanced)
-    return X_scaled
 
 #Input for new data
 col1, col2, col3 = st.columns([4, 4, 2])  # Adjust column widths as needed
