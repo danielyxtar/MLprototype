@@ -191,7 +191,7 @@ poly_transformer = PolynomialFeatures(degree=poly_degree, include_bias=False)
 poly_features_poly = poly_transformer.fit_transform(poly_features)
 
 # Convert the transformed polynomial features back to a DataFrame
- poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
+poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
 
 # Merge the polynomial features with the rest of the input features
  user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
