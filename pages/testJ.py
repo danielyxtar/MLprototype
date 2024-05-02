@@ -31,7 +31,7 @@ outliers = (data['RNA 12'] < lower_bound) | (data['RNA 12'] > upper_bound)
 data.loc[outliers, 'RNA 12'] = rna12_mean
 
 #Feature Engineering and Train-Test-Split
-selected_columns = ['Headache', 'Diarrhea', 'Jaundice', 'Fatigue & generalized bone ache', 'Epigastric pain', 'Fever', 'Nausea/Vomting']
+selected_columns = ['Headache ', 'Diarrhea ', 'Jaundice ', 'Fatigue & generalized bone ache ', 'Epigastric pain ', 'Fever', 'Nausea/Vomting']
 poly_transformer = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
 X_poly = poly_transformer.fit_transform(data[selected_columns])
 X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
