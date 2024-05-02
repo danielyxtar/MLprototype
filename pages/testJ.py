@@ -58,13 +58,31 @@ dump(stacking_model, 'best_model.pkl')
 # Load Model
 model = load('best_model.pkl')
 
-def preprocess_data(df):
-    # Perform any necessary preprocessing steps here
-    # For example, you might handle missing values or scale numerical features
-    # Make sure the preprocessing steps are the same as what was done during training
-    scaler = StandardScaler()
-    df_scaled = scaler.fit_transform(df)
-    return df_scaled
+def preprocess_features(df, poly_transformer, scaler):
+    # Handle missing values
+    rna12_mean = df['RNA 12'].mean()
+    df['RNA 12'].fillna(rna12_mean, inplace=True)
+
+    # Calculate IQR for RNA 12 and replace outliers
+    Q1 = df['RNA 12'].quantile(0.25)
+    Q3 = df['RNA 12'].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    df.loc[(df['RNA 12'] < lower_bound) | (df['RNA 12'] > upper_bound), 'RNA 12'] = rna12_mean
+
+    # Assuming `selected_columns` holds columns to be transformed polynomially
+    selected_columns = ['Headache', 'Diarrhea', 'Jaundice', 'Fatigue & generalized bone ache', 'Epigastric pain', 'Fever', 'Nausea/Vomting']
+    X_poly = poly_transformer.transform(df[selected_columns])
+    X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
+    X_poly_df.index = df.index  # Align index with original data
+
+    # Concatenate with other features
+    X_enhanced = pd.concat([df.drop(selected_columns, axis=1), X_poly_df], axis=1)
+
+    # Scale features
+    X_scaled = scaler.transform(X_enhanced)
+    return X_scaled
 
 #Input for new data
 col1, col2, col3 = st.columns([4, 4, 2])  # Adjust column widths as needed
@@ -178,13 +196,16 @@ poly_transformer = PolynomialFeatures(degree=poly_degree, include_bias=False)
 poly_features_poly = poly_transformer.fit_transform(poly_features)
 
 # Convert the transformed polynomial features back to a DataFrame
-poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
+# poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
 
 # Merge the polynomial features with the rest of the input features
-user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
+# user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
 
 # Make predictions
-predictions = model.predict(user_input_final_df)
+# predictions = model.predict(user_input_final_df)
+
+user_input_preprocessed = preprocess_features(new_df, poly_transformer, scaler)
+predictions = model.predict(user_input_preprocessed)
 
 # Display the prediction
 st.write("Predicted Target Value:", predictions)
