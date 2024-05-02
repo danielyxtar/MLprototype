@@ -194,7 +194,7 @@ poly_features_poly = poly_transformer.fit_transform(poly_features)
 poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
 
 # Merge the polynomial features with the rest of the input features
- user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
+user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
 
 # Display the prediction
 st.write("Predicted Target Value:", predictions)
