@@ -15,7 +15,7 @@ data = pd.read_csv('HCV-Egy-Data.csv')
 X = data.drop(columns=['Baselinehistological staging'])
 y = data['Baselinehistological staging']
 
-@st.cache
+@st.cache_data
 def preprocess_data(X, fit_transform=False):
     # Clean column names
     X.columns = X.columns.str.strip()
