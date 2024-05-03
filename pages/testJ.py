@@ -10,6 +10,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import StackingClassifier
 from sklearn.impute import SimpleImputer
+import pickle
 
 # Load data
 data = pd.read_csv('HCV-Egy-Data.csv')
