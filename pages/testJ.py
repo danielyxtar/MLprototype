@@ -17,6 +17,8 @@ data = pd.read_csv('HCV-Egy-Data.csv')
 X = data.drop(columns=['Baselinehistological staging'])
 y = data['Baselinehistological staging']
 
+@st.cache_data
+
 def preprocess_data(data, poly_transformer, scaler, fit_transform=False):
     # Handle missing values for 'RNA 12'
     imputer = SimpleImputer(strategy='mean')
