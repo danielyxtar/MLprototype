@@ -9,91 +9,63 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import StackingClassifier
-from sklearn.impute import SimpleImputer
-import pickle
 
 # Load data
 data = pd.read_csv('HCV-Egy-Data.csv')
 X = data.drop(columns=['Baselinehistological staging'])
 y = data['Baselinehistological staging']
 
-@st.cache_data
+# Handle outliers
+rna12_mean = data['RNA 12'].mean()
+data['RNA 12'].fillna(rna12_mean, inplace=True)
+# Calculate IQR
+Q1 = data['RNA 12'].quantile(0.25)
+Q3 = data['RNA 12'].quantile(0.75)
+IQR = Q3 - Q1
+# Define the lower and upper bounds for outliers
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+# Identify outliers
+outliers = (data['RNA 12'] < lower_bound) | (data['RNA 12'] > upper_bound)
+# Replace outliers with mean
+data.loc[outliers, 'RNA 12'] = rna12_mean
 
-def preprocess_data(data, poly_transformer, scaler, fit_transform=False):
-    # Handle missing values for 'RNA 12'
-    imputer = SimpleImputer(strategy='mean')
-    data['RNA 12'] = imputer.fit_transform(data[['RNA 12']]) if fit_transform else imputer.transform(data[['RNA 12']])
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=20)
 
-    # Handling outliers (if still required)
-    Q1 = data['RNA 12'].quantile(0.25)
-    Q3 = data['RNA 12'].quantile(0.75)
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-    data.loc[data['RNA 12'] < lower_bound, 'RNA 12'] = data['RNA 12'].mean()
-    data.loc[data['RNA 12'] > upper_bound, 'RNA 12'] = data['RNA 12'].mean()
-
-    # Feature Engineering: Polynomial Features
-    selected_columns = ['Headache ', 'Diarrhea ', 'Jaundice ', 'Fatigue & generalized bone ache ', 'Epigastric pain ', 'Fever', 'Nausea/Vomting']
-    if fit_transform:
-        X_poly = poly_transformer.fit_transform(data[selected_columns])
-    else:
-        X_poly = poly_transformer.transform(data[selected_columns])
-    
-    X_poly_df = pd.DataFrame(X_poly, columns=poly_transformer.get_feature_names_out(selected_columns))
-    data = data.drop(selected_columns, axis=1)
-    data = pd.concat([data, X_poly_df], axis=1)
-    
-    # Scaling
-    if fit_transform:
-        data_scaled = scaler.fit_transform(data)
-    else:
-        data_scaled = scaler.transform(data)
-
-    return data_scaled
-
-poly_transformer = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
-scaler = StandardScaler()
-
-X_preprocessed = preprocess_data(X, poly_transformer, scaler, fit_transform=True)
-
-# Splitting the data
-X_train, X_test, y_train, y_test = train_test_split(X_preprocessed, y, test_size=0.2, random_state=20)
-
-# Stacking Model
 knn_improved = KNeighborsClassifier(n_neighbors=3)  
 nb_improved = GaussianNB(var_smoothing=1.0)
 mlp_improved = MLPClassifier(hidden_layer_sizes=(100,), alpha=0.01, max_iter=2000, random_state=20)
+
 base_models = [
     ('knn', knn_improved),
     ('nb', nb_improved),
     ('mlp', mlp_improved)
 ]
+
 meta_model = LogisticRegression()
-stacking_model = StackingClassifier(estimators=base_models, final_estimator=meta_model, cv=5)
+
+# Stacking classifier configuration
+stacking_model = StackingClassifier(estimators=base_models, final_estimator=meta_model, cv=10)
+
+# Training the model
 stacking_model.fit(X_train, y_train)
 dump(stacking_model, 'best_model.pkl')
 
 # Load Model
 model = load('best_model.pkl')
 
+def preprocess_data(df):
+    # Perform any necessary preprocessing steps here
+    # For example, you might handle missing values or scale numerical features
+    # Make sure the preprocessing steps are the same as what was done during training
+    scaler = StandardScaler()
+    df_scaled = scaler.fit_transform(df)
+    return df_scaled
+
 #Input for new data
 col1, col2, col3 = st.columns([4, 4, 2])  # Adjust column widths as needed
 with col2:
     st.image('logo.png', width=180)
-
-# Using object notation
-add_selectbox = st.sidebar.selectbox(
-    "How would you like to be contacted?",
-    ("Email", "Home phone", "Mobile phone")
-)
-
-# Using "with" notation
-with st.sidebar:
-    add_radio = st.radio(
-        "Choose a shipping method",
-        ("Standard (5-15 days)", "Express (2-5 days)")
-    )
 
 tab1, tab2 = st.tabs(["📈 Analysis Chart", "🗃 Prediction"])
 
@@ -145,61 +117,48 @@ with tab2:
         num_bhg = st.number_input("Baseline Histological Grading : ", placeholder='Enter Baseline Histological Grading', min_value=1, step=1)
     
 
-# Make predictions
-new_data = {}
-gender_mapping = {'Male': 1, 'Female': 2}
-symp_mapping = {'Absent': 1, 'Present': 2}
-new_data = {
-    'Age': num_age,
-    'Gender': gender_mapping[select_gender],
-    'BMI': num_bmi,
-    'WBC': num_wbc,
-    'RBC': num_rbc,
-    'HGB': num_hgb,
-    'Plat': num_plat,
-    'AST 1': num_ast1,
-    'ALT 1': num_alt1,
-    'ALT4': num_alt4,
-    'ALT 12': num_alt12,
-    'ALT 24': num_alt24,
-    'ALT 36': num_alt36,
-    'ALT 48': num_alt48,
-    'ALT after 24 w': num_altafter24,
-    'RNA Base': num_rnabase,
-    'RNA 4': num_rna4,
-    'RNA 12': num_rna12,
-    'RNA EOT': num_rnaeot,
-    'RNA EF': num_rnaef,
-    'Baseline histological Grading': num_bhg,
-    'Fever': symp_mapping[select_fever],
-    'Nausea/Vomting': symp_mapping[select_nausea],
-    'Headache': symp_mapping[select_headache],
-    'Diarrhea': symp_mapping[select_diarrhea],
-    'Fatigue & generalized bone ache': symp_mapping[select_fatigue],
-    'Jaundice': symp_mapping[select_jaundice],
-    'Epigastric pain': symp_mapping[select_epigastric]
-}
+    # Make predictions
+    new_data = {}
+    gender_mapping = {'Male': 1, 'Female': 2}
+    symp_mapping = {'Absent': 1, 'Present': 2}
+    new_data = {
+        'Age': num_age,
+        'Gender': gender_mapping[select_gender],
+        'BMI': num_bmi,
+        'Fever': symp_mapping[select_fever],
+        'Nausea/Vomting': symp_mapping[select_nausea],
+        'Headache': symp_mapping[select_headache],
+        'Diarrhea': symp_mapping[select_diarrhea],
+        'Fatigue & generalized bone ache': symp_mapping[select_fatigue],
+        'Jaundice': symp_mapping[select_jaundice],
+        'Epigastric pain': symp_mapping[select_epigastric],
+        'WBC': num_wbc,
+        'RBC': num_rbc,
+        'HGB': num_hgb,
+        'Plat': num_plat,
+        'AST 1': num_ast1,
+        'ALT 1': num_alt1,
+        'ALT4': num_alt4,
+        'ALT 12': num_alt12,
+        'ALT 24': num_alt24,
+        'ALT 36': num_alt36,
+        'ALT 48': num_alt48,
+        'ALT after 24 w': num_altafter24,
+        'RNA Base': num_rnabase,
+        'RNA 4': num_rna4,
+        'RNA 12': num_rna12,
+        'RNA EOT': num_rnaeot,
+        'RNA EF': num_rnaef,
+        'Baseline histological Grading': num_bhg
+    }
 
-# Create a DataFrame with the new data and specify an index
-new_df = pd.DataFrame([new_data], index=[0])
+    if submit_btn:
+        # Create a DataFrame with the new data and specify an index
+        new_df = pd.DataFrame([new_data], index=[0])
 
-poly_features = new_df[['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain']]
-poly_degree = 2  # Set the polynomial degree
-poly_transformer = PolynomialFeatures(degree=poly_degree, include_bias=False)
-poly_features_poly = poly_transformer.fit_transform(poly_features)
+        # Make predictions
+        predictions = model.predict(new_df)
 
-new_data_preprocessed = preprocess_data(new_data, poly_transformer, scaler, fit_transform=False)
-# Predict using the model
-predictions = model.predict(new_data_preprocessed)
-
-# Convert the transformed polynomial features back to a DataFrame
-poly_features_poly_df = pd.DataFrame(poly_features_poly, columns=poly_transformer.get_feature_names_out(poly_features.columns))
-
-# Merge the polynomial features with the rest of the input features
-user_input_final_df = pd.concat([poly_features_poly_df, new_df.drop(columns=['Fever','Nausea/Vomting','Headache', 'Diarrhea','Fatigue & generalized bone ache','Jaundice','Epigastric pain'])], axis=1)
-
-# Display the prediction
-st.write("Predicted Target Value:", predictions)
+        # Display the prediction
+        st.write("Predicted Baseline Histological Staging for " + txt_name + " is :", predictions)
     
-#if submitted:
-#st.write("slider", slider_val, "checkbox", checkbox_val)
