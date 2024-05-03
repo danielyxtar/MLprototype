@@ -17,7 +17,8 @@ y = data['Baselinehistological staging']
 
 # Handle outliers
 rna12_mean = data['RNA 12'].mean()
-data['RNA 12'].fillna(rna12_mean, inplace=True)
+data.loc[:, 'RNA 12'] = data['RNA 12'].fillna(rna12_mean)
+
 # Calculate IQR
 Q1 = data['RNA 12'].quantile(0.25)
 Q3 = data['RNA 12'].quantile(0.75)
