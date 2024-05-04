@@ -5,7 +5,7 @@ from st_pages import Page, show_pages, add_page_title
 show_pages(
     [
         Page("MLprototype.py", "Home"),
-        Page("other_pages/testJ.py", "Prediction"),
+        Page("pages/testJ.py", "Prediction"),
     ]
 )
 
