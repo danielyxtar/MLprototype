@@ -12,22 +12,8 @@ show_pages(
 
 st.title('Welcome to Rhine Pharmeceuticals')
 
-image = Image.open("logo.png")
+col1, col2, col3 = st.columns([1,2,1]) 
 
-# Add custom CSS to center any image content
-st.markdown(
-    """
-    <style>
-    .centered-img {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Display the image with Streamlit and apply CSS class for centering
-st.image(image, width=180, use_column_width=False, output_format="PNG", classes="centered-img")
-
+# Use the middle column to display the image
+with col2:
+    st.image('logo.png', width=180)
