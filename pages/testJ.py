@@ -12,7 +12,7 @@ from sklearn.ensemble import StackingClassifier
 
 # Load data
 data = pd.read_csv('HCV-Egy-Data.csv')
-data.columns = data.columns.str.strip().str.lower()
+data.columns = data.columns.str.strip()
 X = data.drop(columns=['Baselinehistological staging'])
 y = data['Baselinehistological staging']
 
