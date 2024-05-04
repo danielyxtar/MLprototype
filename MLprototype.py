@@ -11,6 +11,6 @@ show_pages(
 
 st.title('Welcome to Rhine Pharmeceuticals')
 
-st.image('logo.png', width=180)
+st.image('logo.png', width=180, use_column_width='auto')
 
 
