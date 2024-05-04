@@ -12,14 +12,12 @@ from sklearn.ensemble import StackingClassifier
 
 # Load data
 data = pd.read_csv('HCV-Egy-Data.csv')
-data.columns = data.columns.str.strip()
 X = data.drop(columns=['Baselinehistological staging'])
 y = data['Baselinehistological staging']
 
 # Handle outliers
 rna12_mean = data['RNA 12'].mean()
-data.loc[:, 'RNA 12'] = data['RNA 12'].fillna(rna12_mean)
-
+data['RNA 12'].fillna(rna12_mean, inplace=True)
 # Calculate IQR
 Q1 = data['RNA 12'].quantile(0.25)
 Q3 = data['RNA 12'].quantile(0.75)
@@ -72,6 +70,40 @@ with col2:
 tab1, tab2 = st.tabs(["📈 Analysis Chart", "🗃 Prediction"])
 
 tab1.subheader("Analysis Chart")
+with tab1:
+    import streamlit as st
+    import pandas as pd
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    # Title of the web app
+    st.title('Distribution of Baseline Histological Staging in Hepatitis C Patients')
+
+    # Count the occurrences of each staging category
+    staging_counts = data['Baselinehistological staging'].value_counts()
+
+    # Create a figure for the matplotlib plot
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # Generate the bar chart
+    sns.barplot(x=staging_counts.index, y=staging_counts.values, palette='muted', ax=ax)
+
+    # Add annotations
+    for p in ax.patches:
+        ax.annotate(format(p.get_height(), '.1f'), 
+                    (p.get_x() + p.get_width() / 2., p.get_height()), 
+                    ha='center', va='center', 
+                    xytext=(0, 9), 
+                    textcoords='offset points')
+
+    # Set labels and title
+    ax.set_title('Baseline Histological Staging')
+    ax.set_xlabel('Baseline Histological Staging')
+    ax.set_ylabel('Count')
+
+    # Display the plot
+    st.pyplot(fig)
+
 
 # Prediction Tab
 tab2.subheader("HCV Prediction")
