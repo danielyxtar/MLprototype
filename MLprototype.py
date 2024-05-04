@@ -18,4 +18,4 @@ col1, col2, col3 = st.columns([1,2,1])
 with col2:
     st.image('logo.png', width=180)
 
-st.write("Start Analysing the severity of patients with HCV")
+st.write("Start Analysing the severity of patients with HCV"; font-size: 42px)
