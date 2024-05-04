@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from st_pages import Page, show_pages, add_page_title
+from PIL import Image
 
 show_pages(
     [
@@ -11,21 +12,22 @@ show_pages(
 
 st.title('Welcome to Rhine Pharmeceuticals')
 
+image = Image.open("logo.png")
+
+# Add custom CSS to center any image content
 st.markdown(
     """
     <style>
-    .img-container {
-        text-align: center;
+    .centered-img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Use a div element to wrap the image and apply the CSS
-st.markdown(
-    f'<div class="img-container"><img src="logo.png" width="200"></div>', 
-    unsafe_allow_html=True
-)
-
+# Display the image with Streamlit and apply CSS class for centering
+st.image(image, width=180, use_column_width=False, output_format="PNG", classes="centered-img")
 
