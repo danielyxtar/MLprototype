@@ -17,3 +17,5 @@ col1, col2, col3 = st.columns([1,2,1])
 # Use the middle column to display the image
 with col2:
     st.image('logo.png', width=180)
+
+st.write("Analyse severity of patients with HCV")
