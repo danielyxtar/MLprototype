@@ -11,6 +11,21 @@ show_pages(
 
 st.title('Welcome to Rhine Pharmeceuticals')
 
-st.image('logo.png', width=180, use_column_width='auto')
+st.markdown(
+    """
+    <style>
+    .img-container {
+        text-align: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Use a div element to wrap the image and apply the CSS
+st.markdown(
+    f'<div class="img-container"><img src="logo.png" width="180"></div>', 
+    unsafe_allow_html=True
+)
 
 
