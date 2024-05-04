@@ -24,7 +24,7 @@ st.markdown(
 
 # Use a div element to wrap the image and apply the CSS
 st.markdown(
-    f'<div class="img-container"><img src="logo.png" width="180"></div>', 
+    f'<div class="img-container"><img src="logo.png" width="200"></div>', 
     unsafe_allow_html=True
 )
 
