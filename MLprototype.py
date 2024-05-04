@@ -21,5 +21,5 @@ with col2:
 #st.write("Start Analysing the severity of patients with HCV")
 
 st.markdown("""
-<p style='font-size: 22px; font-family: Helvetica;'>Start Analysing the severity of patients with HCV by going to the prediction tab</p>
+<p style='font-size: 20px; font-family: Helvetica;'>Start Analysing the severity of patients with HCV by going to the prediction tab</p>
 """, unsafe_allow_html=True)
