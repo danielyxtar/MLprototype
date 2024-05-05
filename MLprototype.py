@@ -25,5 +25,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("""
-<p style='font-size: 18px; font-family: Arial;'>Need more info on Hepatitis C virus? Head over to https://www.who.int/news-room/fact-sheets/detail/hepatitis-c </p>
+<p style='font-size: 18px; font-family: Arial;'>Need more info on Hepatitis C virus? Head over to <a href='https://www.who.int/news-room/fact-sheets/detail/hepatitis-c' target='_blank'>WHO Hepatitis C Fact Sheet</a>.</p>
 """, unsafe_allow_html=True)
+
