@@ -10,13 +10,13 @@ show_pages(
     ]
 )
 
-st.title('Welcome to Rhine Pharmeceuticals')
-
 col1, col2, col3 = st.columns([1,2,1]) 
 
 # Use the middle column to display the image
 with col2:
     st.image('logo.png', width=180)
+
+st.title('Welcome to Rhine Pharmeceuticals')
 
 #st.write("Start Analysing the severity of patients with HCV")
 
