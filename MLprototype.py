@@ -23,3 +23,7 @@ with col2:
 st.markdown("""
 <p style='font-size: 20px; font-family: Helvetica;'>Start Analysing the severity of patients with HCV by going to the prediction tab</p>
 """, unsafe_allow_html=True)
+
+st.markdown("""
+<p style='font-size: 18px; font-family: Arial;'>Need more info on Hepatitis C virus? Head over to https://www.who.int/news-room/fact-sheets/detail/hepatitis-c </p>
+""", unsafe_allow_html=True)
